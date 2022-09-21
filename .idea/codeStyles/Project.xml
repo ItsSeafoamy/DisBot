@@ -1,0 +1,39 @@
+<component name="ProjectCodeStyleConfiguration">
+  <code_scheme name="Project" version="173">
+    <JavaCodeStyleSettings>
+      <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
+        <value />
+      </option>
+      <option name="IMPORT_LAYOUT_TABLE">
+        <value>
+          <package name="" withSubpackages="true" static="false" />
+          <package name="" withSubpackages="true" static="true" />
+        </value>
+      </option>
+    </JavaCodeStyleSettings>
+    <codeStyleSettings language="JAVA">
+      <option name="RIGHT_MARGIN" value="999" />
+      <option name="KEEP_SIMPLE_BLOCKS_IN_ONE_LINE" value="true" />
+      <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true" />
+      <option name="KEEP_SIMPLE_LAMBDAS_IN_ONE_LINE" value="true" />
+      <option name="KEEP_SIMPLE_CLASSES_IN_ONE_LINE" value="true" />
+      <option name="FIELD_ANNOTATION_WRAP" value="0" />
+      <option name="WRAP_ON_TYPING" value="0" />
+      <indentOptions>
+        <option name="USE_TAB_CHARACTER" value="true" />
+      </indentOptions>
+    </codeStyleSettings>
+    <codeStyleSettings language="JSON">
+      <option name="SPACE_AFTER_COMMA" value="false" />
+      <indentOptions>
+        <option name="INDENT_SIZE" value="4" />
+        <option name="USE_TAB_CHARACTER" value="true" />
+      </indentOptions>
+    </codeStyleSettings>
+    <codeStyleSettings language="XML">
+      <indentOptions>
+        <option name="USE_TAB_CHARACTER" value="true" />
+      </indentOptions>
+    </codeStyleSettings>
+  </code_scheme>
+</component>
