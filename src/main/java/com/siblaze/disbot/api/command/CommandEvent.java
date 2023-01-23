@@ -3,6 +3,8 @@ package com.siblaze.disbot.api.command;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 public class CommandEvent {
@@ -34,7 +36,7 @@ public class CommandEvent {
 		return this;
 	}
 
-	protected CommandEvent setChannel(MessageChannel channel) {
+	protected CommandEvent setChannel(MessageChannelUnion channel) {
 		this.channel = channel;
 		return this;
 	}

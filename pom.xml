@@ -6,7 +6,7 @@
 
 	<groupId>com.siblaze</groupId>
 	<artifactId>disbot</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.2-SNAPSHOT</version>
 
 	<build>
 		<plugins>
@@ -38,7 +38,6 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<finalName>ignore-this</finalName>
 	</build>
 
 	<properties>
@@ -57,11 +56,6 @@
 			<url>https://jcenter.bintray.com</url>
 		</repository>
 		<repository>
-			<id>central</id>
-			<name>bintray</name>
-			<url>https://jcenter.bintray.com</url>
-		</repository>
-		<repository>
 			<id>dv8tion</id>
 			<name>m2-dv8tion</name>
 			<url>https://m2.dv8tion.net/releases</url>
@@ -71,20 +65,13 @@
 			<name>Maven Central</name>
 			<url>https://repo.maven.apache.org/maven2/</url>
 		</repository>
-		<repository>
-			<id>github</id>
-			<url>https://maven.pkg.github.com/laxynd/disbot</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
 	</repositories>
 
 	<dependencies>
 		<dependency>
-			<groupId>com.github.DV8FromTheWorld</groupId>
+			<groupId>net.dv8tion</groupId>
 			<artifactId>JDA</artifactId>
-			<version>5.0.0-alpha.16</version>
+			<version>5.0.0-beta.3</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -118,12 +105,4 @@
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
-
-	<distributionManagement>
-		<repository>
-			<id>github</id>
-			<name>GitHub laxynd Apache Maven Packages</name>
-			<url>https://maven.pkg.github.com/laxynd/disbot</url>
-		</repository>
-	</distributionManagement>
 </project>

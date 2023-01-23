@@ -6,12 +6,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import javax.security.auth.login.LoginException;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.requests.GatewayIntent;
 
 public abstract class DiscordBot {
 
@@ -49,14 +47,9 @@ public abstract class DiscordBot {
 		}
 
 		JDABuilder jdaBuilder = JDABuilder.createLight(state == State.PRODUCTION ? config.tokens.production : config.tokens.debug);
-		jdaBuilder.enableIntents(GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT);
 		onLogin(jdaBuilder);
 
-		try {
-			jda = jdaBuilder.build();
-		} catch (LoginException e) {
-			throw new RuntimeException(e);
-		}
+		jda = jdaBuilder.build();
 
 		commandManager = new CommandManager(jda);
 		if (state == State.DEBUG) commandManager.setPrefix(">");
