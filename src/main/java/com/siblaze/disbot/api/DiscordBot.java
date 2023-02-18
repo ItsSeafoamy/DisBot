@@ -10,12 +10,15 @@ import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class DiscordBot {
 
 	@Getter @Setter private BotConfiguration config;
 	@Getter private JDA jda;
 	@Getter private CommandManager commandManager;
+	@Getter private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
 
 	/**
 	 * Called when this bot is logging in.
@@ -35,6 +38,8 @@ public abstract class DiscordBot {
 	 * @param state The state to load this bot in, either {@link State#PRODUCTION} or {@link State#DEBUG}
 	 */
 	public void load(State state) {
+		logger.info("Loading " + getClass().getSimpleName() + " in " + state + " mode");
+
 		// Config hasn't been loaded yet
 		if (getConfig() == null) {
 			try {

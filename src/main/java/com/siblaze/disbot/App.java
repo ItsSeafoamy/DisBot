@@ -15,11 +15,14 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class App {
 
 	@Getter private static DisBotConfiguration config;
 	private static final List<DiscordBot> bots = new ArrayList<>();
+	private static final Logger logger = LoggerFactory.getLogger("DisBot");
 
 	public static void main(String[] args) {
 		//Configuration
@@ -70,13 +73,12 @@ public class App {
 				if (obj instanceof DiscordBot bot) {
 					bot.load(DiscordBot.State.PRODUCTION);
 				} else {
-					System.err.println("Main class does not extend from DiscordBot");
+					logger.error("Main class does not extend from DiscordBot");
 				}
 			} catch (IOException | URISyntaxException e) {
-				System.err.println("Could not load bot from " + botJar.getName() + ". Make sure bot.json is present!");
-				e.printStackTrace();
+				logger.error("Could not load bot from " + botJar.getName() + ". Make sure bot.json is present!", e);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Could not load bot from " + botJar.getName() + ".", e);
 			}
 		}
 
