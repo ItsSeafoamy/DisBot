@@ -32,10 +32,10 @@ public abstract class DiscordBot {
 
 	/**
 	 * Loads this bot
-	 * @param state
+	 * @param state The state to load this bot in, either {@link State#PRODUCTION} or {@link State#DEBUG}
 	 */
 	public void load(State state) {
-		//Config hasn't been loaded yet
+		// Config hasn't been loaded yet
 		if (getConfig() == null) {
 			try {
 				String botJson = Files.readString(Path.of(getClass().getClassLoader().getResource("bot.json").toURI()));
@@ -51,10 +51,12 @@ public abstract class DiscordBot {
 
 		jda = jdaBuilder.build();
 
-		commandManager = new CommandManager(jda);
+		commandManager = new CommandManager(this);
 		if (state == State.DEBUG) commandManager.setPrefix(">");
 
 		onEnable();
+
+		commandManager.updateCommands();
 	}
 
 	public enum State {

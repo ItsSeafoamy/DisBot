@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -35,6 +36,7 @@ public abstract class Command {
 
 	@Getter private final String name;
 	@Getter private final int defaultPermissionLevel;
+	@Getter @Setter(AccessLevel.PACKAGE) private int context;
 
 	@Getter private final String[] aliases;
 	@Getter private final String description;
@@ -43,15 +45,20 @@ public abstract class Command {
 	@Getter private final HashMap<String, Integer> optionPermissions = new HashMap<>();
 	@Getter @Setter private String anonymousField;
 
-	public Command(String name, int defaultPermissionLevel, String description, String... aliases) {
+	public Command(String name, int defaultPermissionLevel, int context, String description, String... aliases) {
 		this.name = name;
 		this.defaultPermissionLevel = defaultPermissionLevel;
+		this.context = context;
 		this.description = description;
 		this.aliases = aliases;
 	}
 
+	public Command(String name, int defaultPermissionLevel, String description, String... aliases) {
+		this(name, defaultPermissionLevel, CommandContext.ALL, description, aliases);
+	}
+
 	public Command(String name, String description, String... aliases) {
-		this(name, EVERYONE, description, aliases);
+		this(name, EVERYONE, CommandContext.ALL, description, aliases);
 	}
 
 	public void registerOption(OptionData option) {

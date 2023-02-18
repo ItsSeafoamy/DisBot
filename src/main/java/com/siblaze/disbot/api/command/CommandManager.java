@@ -1,6 +1,7 @@
 package com.siblaze.disbot.api.command;
 
 import com.google.common.base.Joiner;
+import com.siblaze.disbot.api.DiscordBot;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,22 +15,24 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 public class CommandManager extends ListenerAdapter {
 
-	private final List<Command> commandsGuild = new ArrayList<>();
-	private final List<Command> commandsDm = new ArrayList<>();
-	private final List<Command> commandsGuildSlash = new ArrayList<>();
-	private final List<Command> commandsDmSlash = new ArrayList<>();
+	private final List<Command> commands = new ArrayList<>();
 
+	@Getter private final DiscordBot bot;
 	@Getter private final JDA jda;
 
 	@Getter @Setter private String prefix = "!";
 
-	public CommandManager(JDA jda) {
-		this.jda = jda;
+	public CommandManager(DiscordBot bot) {
+		this.bot = bot;
+		this.jda = bot.getJda();
 
 		jda.addEventListener(this);
 
@@ -39,56 +42,40 @@ public class CommandManager extends ListenerAdapter {
 	public Command[] getCommands(int contexts) {
 		List<Command> commands = new ArrayList<>();
 
-		if ((contexts & CommandContext.GUILD_PREFIX) == CommandContext.GUILD_PREFIX) {
-			for (Command command : commandsGuild) {
-				if (!commands.contains(command)) commands.add(command);
-			}
-		}
-
-		if ((contexts & CommandContext.DIRECT_MESSAGE_PREFIX) == CommandContext.DIRECT_MESSAGE_PREFIX) {
-			for (Command command : commandsDm) {
-				if (!commands.contains(command)) commands.add(command);
-			}
-		}
-
-		if ((contexts & CommandContext.GUILD_SLASH) == CommandContext.GUILD_SLASH) {
-			for (Command command : commandsGuildSlash) {
-				if (!commands.contains(command)) commands.add(command);
-			}
-		}
-
-		if ((contexts & CommandContext.DIRECT_MESSAGE_SLASH) == CommandContext.DIRECT_MESSAGE_SLASH) {
-			for (Command command : commandsGuild) {
-				if (!commands.contains(command)) commands.add(command);
-			}
+		for (Command cmd : this.commands) {
+			if ((cmd.getContext() & contexts) != 0) commands.add(cmd);
 		}
 
 		return commands.toArray(new Command[0]);
 	}
 
-	public void registerCommand(Command command, int contexts) {
-		if ((contexts & CommandContext.GUILD_PREFIX) == CommandContext.GUILD_PREFIX) {
-			commandsGuild.add(command);
-		}
-
-		if ((contexts & CommandContext.DIRECT_MESSAGE_PREFIX) == CommandContext.DIRECT_MESSAGE_PREFIX) {
-			commandsDm.add(command);
-		}
-
-		if ((contexts & CommandContext.GUILD_SLASH) == CommandContext.GUILD_SLASH) {
-			commandsGuildSlash.add(command);
-			jda.upsertCommand(command.getName(), command.getDescription()).addOptions(command.getOptions()).setDefaultPermissions(command.getDefaultSlashPermission()).queue();
-		}
-
-		if ((contexts & CommandContext.DIRECT_MESSAGE_SLASH) == CommandContext.DIRECT_MESSAGE_SLASH) {
-			commandsDmSlash.add(command);
-			jda.upsertCommand(command.getName(), command.getDescription()).addOptions(command.getOptions()).setDefaultPermissions(command.getDefaultSlashPermission()).queue();
-		}
+	public void registerCommand(Command command) {
+		commands.add(command);
 	}
 
-	public Command getCommand(String label, boolean dm) {
-		List<Command> commands = dm ? commandsDm : commandsGuild;
+	/**
+	 * @deprecated Use {@link #registerCommand(Command)} instead. <br/>
+	 * Contexts are now set in the {@link Command} constructor. <br/>
+	 * Using this method will change the command's context for backwards compatibility.
+	 */
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
+	public void registerCommand(Command command, int contexts) {
+		command.setContext(contexts);
+		registerCommand(command);
+	}
 
+	/**
+	 * @deprecated Use {@link #getCommand(String)} instead. <br/>
+	 * The direct message parameter is no longer used.
+	 */
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
+	public Command getCommand(String label, boolean dm) {
+		return getCommand(label);
+	}
+
+	public Command getCommand(String label) {
 		for (Command cmd : commands) {
 			if (cmd.matches(label)) return cmd;
 		}
@@ -96,8 +83,21 @@ public class CommandManager extends ListenerAdapter {
 		return null;
 	}
 
-	public Command getCommand(String label) {
-		return getCommand(label, false);
+	public void updateCommands() {
+		List<SlashCommandData> slashCommandData = new ArrayList<>();
+
+		for (Command command : getCommands(CommandContext.SLASH)) {
+			SlashCommandData data = Commands.slash(command.getName(), command.getDescription());
+			data.setDefaultPermissions(command.getDefaultSlashPermission());
+
+			data.addOptions(command.getOptions());
+
+			if ((command.getContext() & CommandContext.DIRECT_MESSAGE_SLASH) == 0) data.setGuildOnly(true);
+
+			slashCommandData.add(data);
+		}
+
+		jda.updateCommands().addCommands(slashCommandData).queue();
 	}
 
 	@Override
@@ -108,7 +108,7 @@ public class CommandManager extends ListenerAdapter {
 			if (msg.startsWith(prefix)) {
 				String command = msg.split(" ")[0].substring(prefix.length());
 
-				List<Command> commands = event.isFromGuild() || event.isFromThread() ? commandsGuild : commandsDm;
+				Command[] commands = event.isFromGuild() || event.isFromThread() ? getCommands(CommandContext.GUILD_PREFIX) : getCommands(CommandContext.DIRECT_MESSAGE_PREFIX);
 				for (Command cmd : commands) {
 					if (cmd.matches(command)) {
 						if (cmd.hasPermission(event.getMember())) {
@@ -229,7 +229,7 @@ public class CommandManager extends ListenerAdapter {
 			String command = event.getName();
 
 			if (event.getGuild() != null) {
-				for (Command cmd : commandsGuildSlash) {
+				for (Command cmd : getCommands(CommandContext.GUILD_SLASH)) {
 					if (cmd.matches(command)) {
 						if (cmd.hasPermission(event.getMember())) {
 							List<OptionMapping> optionMap = event.getOptions();
@@ -256,7 +256,7 @@ public class CommandManager extends ListenerAdapter {
 					}
 				}
 			} else {
-				for (Command cmd : commandsDmSlash) {
+				for (Command cmd : getCommands(CommandContext.DIRECT_MESSAGE_SLASH)) {
 					if (cmd.matches(command)) {
 						if (cmd.hasPermission(event.getMember())) {
 							List<OptionMapping> optionMap = event.getOptions();

@@ -1,5 +1,6 @@
 package com.siblaze.disbot.api.command;
 
+import com.siblaze.disbot.api.DiscordBot;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
@@ -18,12 +19,14 @@ public class CommandEvent {
 	@Getter private boolean slashCommand;
 	@Getter private SlashCommandInteractionEvent slashCommandEvent;
 	@Getter private final CommandManager commandManager;
+	@Getter private final DiscordBot bot;
 	@Getter private final JDA jda;
 
 	protected CommandEvent(String label, CommandManager commandManager) {
 		this.label = label;
 		this.commandManager = commandManager;
 		this.jda = commandManager.getJda();
+		this.bot = commandManager.getBot();
 	}
 
 	protected CommandEvent setUser(User user) {
