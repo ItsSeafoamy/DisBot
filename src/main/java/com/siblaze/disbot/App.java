@@ -25,6 +25,8 @@ public class App {
 	private static final Logger logger = LoggerFactory.getLogger("DisBot");
 
 	public static void main(String[] args) {
+		logger.info("Starting DisBot v1.3");
+
 		//Configuration
 		File configFile = new File("config.json");
 
@@ -68,7 +70,7 @@ public class App {
 
 				BotConfiguration botConfig = new Gson().fromJson(botJson, BotConfiguration.class);
 
-				Object obj = Class.forName(botConfig.mainClass, true, loader).getDeclaredConstructor().newInstance();
+				Object obj = Class.forName(botConfig.getMainClass(), true, loader).getDeclaredConstructor().newInstance();
 
 				if (obj instanceof DiscordBot bot) {
 					bot.load(DiscordBot.State.PRODUCTION);
