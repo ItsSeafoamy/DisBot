@@ -27,10 +27,10 @@ public class App {
 	public static void main(String[] args) {
 		logger.info("Starting DisBot v1.3");
 
-		//Configuration
+		// Configuration
 		File configFile = new File("config.json");
 
-		//If config doesn't exist, create default
+		// If config doesn't exist, create default
 		if (!configFile.exists()) {
 			InputStream defaultConfig = App.class.getResourceAsStream("/config.json");
 
@@ -42,7 +42,7 @@ public class App {
 			}
 		}
 
-		//Read config
+		// Read config
 		try {
 			String json = Files.readString(configFile.toPath());
 			config = new Gson().fromJson(json, DisBotConfiguration.class);
@@ -54,7 +54,7 @@ public class App {
 		File botsFolder = new File(config.botsFolder);
 		if (!botsFolder.exists()) botsFolder.mkdir();
 
-		//Load bots
+		// Load bots
 		File[] bots = botsFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
 
 		for (File botJar : bots) {
@@ -84,7 +84,7 @@ public class App {
 			}
 		}
 
-		//Shutdown if "end" is sent from console
+		// Shutdown if "end" is sent from console
 		try (Scanner scanner = new Scanner(System.in)) {
 			String line;
 
@@ -92,6 +92,7 @@ public class App {
 				line = scanner.nextLine();
 
 				if (line.equalsIgnoreCase("end")) {
+					logger.info("Shutting down...");
 					System.exit(0);
 				}
 			}

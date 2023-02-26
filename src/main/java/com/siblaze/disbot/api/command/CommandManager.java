@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -16,7 +17,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -90,7 +90,7 @@ public class CommandManager extends ListenerAdapter {
 			SlashCommandData data = Commands.slash(command.getName(), command.getDescription());
 			data.setDefaultPermissions(command.getDefaultSlashPermission());
 
-			data.addOptions(command.getOptions());
+			data.addOptions(command.getOptions().stream().map(CommandOption::getOptionData).collect(Collectors.toList()));
 
 			if ((command.getContext() & CommandContext.DIRECT_MESSAGE_SLASH) == 0) data.setGuildOnly(true);
 
@@ -111,7 +111,7 @@ public class CommandManager extends ListenerAdapter {
 				Command[] commands = event.isFromGuild() || event.isFromThread() ? getCommands(CommandContext.GUILD_PREFIX) : getCommands(CommandContext.DIRECT_MESSAGE_PREFIX);
 				for (Command cmd : commands) {
 					if (cmd.matches(command)) {
-						if (cmd.hasPermission(event.getMember())) {
+						if (cmd.getAbility().hasAbility(bot, event.getMember())) {
 							HashMap<String, OptionValue> options = new HashMap<>();
 							List<String> anonymousOptions = new ArrayList<>();
 							List<String> unrecognizedOptions = new ArrayList<>();
@@ -125,31 +125,27 @@ public class CommandManager extends ListenerAdapter {
 											String name = s.split("=")[0].substring(1);
 											String value = s.split("=")[1];
 
-											boolean optionExists = false;
-											for (OptionData option : cmd.getOptions()) {
-												if (option.getName().equalsIgnoreCase(name) && cmd.hasPermission(event.getMember(), cmd.getOptionPermissions().get(option.getName()))) {
+											CommandOption option = cmd.getOption(name);
+											if (option != null) {
+												if (option.getAbility().hasAbility(bot, event.getMember())) {
 													options.put(option.getName(), new OptionValue(option.getType(), option.getName(), value));
-													optionExists = true;
-													break;
+												} else {
+													unrecognizedOptions.add(name);
 												}
-											}
-
-											if (!optionExists) {
+											} else {
 												unrecognizedOptions.add(name);
 											}
 										} else {
 											String name = s.substring(1);
 
-											boolean optionExists = false;
-											for (OptionData option : cmd.getOptions()) {
-												if (option.getName().equalsIgnoreCase(name) && cmd.hasPermission(event.getMember(), cmd.getOptionPermissions().get(option.getName()))) {
+											CommandOption option = cmd.getOption(name);
+											if (option != null) {
+												if (option.getAbility().hasAbility(bot, event.getMember())) {
 													options.put(option.getName(), new OptionValue(option.getType(), option.getName(), "true"));
-													optionExists = true;
-													break;
+												} else {
+													unrecognizedOptions.add(name);
 												}
-											}
-
-											if (!optionExists) {
+											} else {
 												unrecognizedOptions.add(name);
 											}
 										}
@@ -165,16 +161,16 @@ public class CommandManager extends ListenerAdapter {
 							} else {
 								int index = 0;
 
-								for (OptionData option : cmd.getOptions()) {
+								for (CommandOption option : cmd.getOptions()) {
 									if (index >= anonymousOptions.size()) break;
 									if (options.containsKey(option.getName())) continue;
-									if (!cmd.hasPermission(event.getMember(), cmd.getOptionPermissions().get(option.getName()))) continue;
+									if (!option.getAbility().hasAbility(bot, event.getMember())) continue;
 
 									options.put(option.getName(), new OptionValue(option.getType(), option.getName(), anonymousOptions.get(index++)));
 								}
 							}
 
-							for (OptionData option : cmd.getOptions()) {
+							for (CommandOption option : cmd.getOptions()) {
 								if (!options.containsKey(option.getName()) && option.isRequired()) {
 									cmd.missingOption(option, event.getChannel());
 									return;
@@ -231,7 +227,7 @@ public class CommandManager extends ListenerAdapter {
 			if (event.getGuild() != null) {
 				for (Command cmd : getCommands(CommandContext.GUILD_SLASH)) {
 					if (cmd.matches(command)) {
-						if (cmd.hasPermission(event.getMember())) {
+						if (cmd.getAbility().hasAbility(bot, event.getMember())) {
 							List<OptionMapping> optionMap = event.getOptions();
 							HashMap<String, OptionValue> options = new HashMap<>();
 
@@ -258,7 +254,7 @@ public class CommandManager extends ListenerAdapter {
 			} else {
 				for (Command cmd : getCommands(CommandContext.DIRECT_MESSAGE_SLASH)) {
 					if (cmd.matches(command)) {
-						if (cmd.hasPermission(event.getMember())) {
+						if (cmd.getAbility().hasAbility(bot, event.getMember())) {
 							List<OptionMapping> optionMap = event.getOptions();
 							HashMap<String, OptionValue> options = new HashMap<>();
 
