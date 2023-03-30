@@ -6,16 +6,21 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class DiscordBot {
 
-	@Getter @Setter private BotConfiguration config;
+	@Getter(AccessLevel.PROTECTED) @Setter(AccessLevel.PROTECTED) private BotConfiguration config;
 	@Getter private JDA jda;
 	@Getter private CommandManager commandManager;
+	@Getter private Logger logger;
 
 	/**
 	 * Called when this bot is logging in.
@@ -30,12 +35,29 @@ public abstract class DiscordBot {
 	 */
 	public void onEnable() {}
 
+	public String getName() {
+		return config.getName().isEmpty() ? getClass().getSimpleName() : config.getName();
+	}
+
+	public String getVersion() {
+		return config.getVersion();
+	}
+
+	public Developer[] getDevelopers() {
+		return config.getDevelopers();
+	}
+
+	public String getDevelopersAsString() {
+		// Return a string of all developer names, separated by commas. If there are no developers, return "Unknown"
+		return getDevelopers().length == 0 ? "Unknown" : Arrays.stream(getDevelopers()).map(Developer::getName).reduce((a, b) -> a + ", " + b).orElse("Unknown");
+	}
+
 	/**
 	 * Loads this bot
-	 * @param state
+	 * @param state The state to load this bot in, either {@link State#PRODUCTION} or {@link State#DEBUG}
 	 */
 	public void load(State state) {
-		//Config hasn't been loaded yet
+		// Config hasn't been loaded yet
 		if (getConfig() == null) {
 			try {
 				String botJson = Files.readString(Path.of(getClass().getClassLoader().getResource("bot.json").toURI()));
@@ -46,15 +68,21 @@ public abstract class DiscordBot {
 			}
 		}
 
-		JDABuilder jdaBuilder = JDABuilder.createLight(state == State.PRODUCTION ? config.tokens.production : config.tokens.debug);
+		logger = LoggerFactory.getLogger(getName());
+		logger.info("Loading " + getName() + " v" + getVersion() + " by " + getDevelopersAsString());
+
+		JDABuilder jdaBuilder = JDABuilder.createLight(state == State.PRODUCTION ? config.getTokens().production : config.getTokens().debug);
+		config.setTokens(null);
 		onLogin(jdaBuilder);
 
 		jda = jdaBuilder.build();
 
-		commandManager = new CommandManager(jda);
+		commandManager = new CommandManager(this);
 		if (state == State.DEBUG) commandManager.setPrefix(">");
 
 		onEnable();
+
+		commandManager.updateCommands();
 	}
 
 	public enum State {

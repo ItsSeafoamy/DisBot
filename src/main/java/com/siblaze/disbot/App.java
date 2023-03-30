@@ -15,17 +15,22 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
 import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class App {
 
 	@Getter private static DisBotConfiguration config;
 	private static final List<DiscordBot> bots = new ArrayList<>();
+	private static final Logger logger = LoggerFactory.getLogger("DisBot");
 
 	public static void main(String[] args) {
-		//Configuration
+		logger.info("Starting DisBot v1.3");
+
+		// Configuration
 		File configFile = new File("config.json");
 
-		//If config doesn't exist, create default
+		// If config doesn't exist, create default
 		if (!configFile.exists()) {
 			InputStream defaultConfig = App.class.getResourceAsStream("/config.json");
 
@@ -37,7 +42,7 @@ public class App {
 			}
 		}
 
-		//Read config
+		// Read config
 		try {
 			String json = Files.readString(configFile.toPath());
 			config = new Gson().fromJson(json, DisBotConfiguration.class);
@@ -49,7 +54,7 @@ public class App {
 		File botsFolder = new File(config.botsFolder);
 		if (!botsFolder.exists()) botsFolder.mkdir();
 
-		//Load bots
+		// Load bots
 		File[] bots = botsFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
 
 		for (File botJar : bots) {
@@ -65,22 +70,21 @@ public class App {
 
 				BotConfiguration botConfig = new Gson().fromJson(botJson, BotConfiguration.class);
 
-				Object obj = Class.forName(botConfig.mainClass, true, loader).getDeclaredConstructor().newInstance();
+				Object obj = Class.forName(botConfig.getMainClass(), true, loader).getDeclaredConstructor().newInstance();
 
 				if (obj instanceof DiscordBot bot) {
 					bot.load(DiscordBot.State.PRODUCTION);
 				} else {
-					System.err.println("Main class does not extend from DiscordBot");
+					logger.error("Main class does not extend from DiscordBot");
 				}
 			} catch (IOException | URISyntaxException e) {
-				System.err.println("Could not load bot from " + botJar.getName() + ". Make sure bot.json is present!");
-				e.printStackTrace();
+				logger.error("Could not load bot from " + botJar.getName() + ". Make sure bot.json is present!", e);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Could not load bot from " + botJar.getName() + ".", e);
 			}
 		}
 
-		//Shutdown if "end" is sent from console
+		// Shutdown if "end" is sent from console
 		try (Scanner scanner = new Scanner(System.in)) {
 			String line;
 
@@ -88,6 +92,7 @@ public class App {
 				line = scanner.nextLine();
 
 				if (line.equalsIgnoreCase("end")) {
+					logger.info("Shutting down...");
 					System.exit(0);
 				}
 			}

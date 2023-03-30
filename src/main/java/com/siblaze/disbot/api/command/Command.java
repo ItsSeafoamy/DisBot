@@ -1,82 +1,123 @@
 package com.siblaze.disbot.api.command;
 
+import com.siblaze.disbot.api.Abilities;
+import com.siblaze.disbot.api.Ability;
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.ApiStatus;
 
 public abstract class Command {
 
-	/**Everyone is able to use this command by default**/
-	public static int EVERYONE = 0;
-	/**Only those with the ADMINISTRATOR permission are able to use this command by default**/
-	public static int ADMINISTRATOR = 1;
-	/**Only the server owner is able to use this command by default**/
-	public static int SERVER_OWNER = 2;
-	/**No one is able to use this command by default**/
-	public static int NO_ONE = 3;
-	/**Only those with a role called DJ, or those alone in the voice channel with this bot, is able to use this command by default**/
-	public static int DJ_OR_ALONE = 4;
-	/**Only those with a role called DJ, is able to use this command by default**/
-	public static int DJ_ONLY = 5;
-	/**Only Lax may use this command**/
-	public static int LAX = 6;
+	/** @deprecated Use {@link Abilities#EVERYONE} instead**/
+	@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.4") public static final int EVERYONE = 0;
+
+	/** @deprecated Use {@link Abilities#ADMINISTRATOR} instead **/
+	@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.4") public static final int ADMINISTRATOR = 1;
+
+	/** @deprecated Use {@link Abilities#SERVER_OWNER} instead **/
+	@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.4") public static final int SERVER_OWNER = 2;
+
+	/** @deprecated Use {@link Abilities#NO_ONE} instead **/
+	@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.4") public static final int NO_ONE = 3;
+
+	/** @deprecated Should be implemented by the bot if needed **/
+	@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.4") public static final int DJ_OR_ALONE = 4;
+
+	/** @deprecated Use {@link Abilities#DJ_OR_ALONE} instead **/
+	@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.4") public static final int DJ_ONLY = 5;
+
+	/** @deprecated Use {@link Abilities#DEVELOPER} instead **/
+	@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.4") public static final int LAX = 6;
 
 	@Getter private final String name;
-	@Getter private final int defaultPermissionLevel;
+	@Getter private final Ability ability;
+	@Getter @Setter(AccessLevel.PACKAGE) private int context;
 
 	@Getter private final String[] aliases;
 	@Getter private final String description;
 
-	@Getter private final List<OptionData> options = new ArrayList<>();
-	@Getter private final HashMap<String, Integer> optionPermissions = new HashMap<>();
+	@Getter private final List<CommandOption> options = new ArrayList<>();
 	@Getter @Setter private String anonymousField;
 
-	public Command(String name, int defaultPermissionLevel, String description, String... aliases) {
+	public Command(String name, Ability ability, int context, String description, String... aliases) {
 		this.name = name;
-		this.defaultPermissionLevel = defaultPermissionLevel;
+		this.ability = ability;
+		this.context = context;
 		this.description = description;
 		this.aliases = aliases;
 	}
 
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
+	public Command(String name, int defaultPermissionLevel, String description, String... aliases) {
+		this(name, switch(defaultPermissionLevel) {
+			case ADMINISTRATOR -> Abilities.ADMINISTRATOR;
+			case SERVER_OWNER -> Abilities.SERVER_OWNER;
+			case NO_ONE -> Abilities.NO_ONE;
+			case DJ_OR_ALONE -> Abilities.DJ_OR_ALONE;
+			case DJ_ONLY -> Abilities.DJ_ONLY;
+			case LAX -> Abilities.DEVELOPER;
+			default -> Abilities.EVERYONE;
+		}, CommandContext.ALL, description, aliases);
+	}
+
 	public Command(String name, String description, String... aliases) {
-		this(name, EVERYONE, description, aliases);
+		this(name, Abilities.EVERYONE, CommandContext.ALL, description, aliases);
+	}
+
+	public void registerOption(CommandOption option) {
+		options.add(option);
 	}
 
 	public void registerOption(OptionData option) {
-		options.add(option);
-		optionPermissions.put(option.getName(), EVERYONE);
+		options.add(new CommandOption(option));
 	}
 
 	public void registerOption(OptionType type, String field, String description, boolean isRequired) {
-		options.add(new OptionData(type, field, description, isRequired));
-		optionPermissions.put(field, EVERYONE);
+		options.add(new CommandOption(type, field, description, isRequired));
 	}
 
+	/**
+	 * @deprecated Use {@link #registerOption(OptionType, String, String, boolean, Ability)} instead
+	 */
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 	public void registerOption(OptionType type, String field, String description, boolean isRequired, int permission) {
-		options.add(new OptionData(type, field, description, isRequired));
-		optionPermissions.put(field, permission);
+		options.add(new CommandOption(type, field, description, isRequired, switch(permission) {
+			case ADMINISTRATOR -> Abilities.ADMINISTRATOR;
+			case SERVER_OWNER -> Abilities.SERVER_OWNER;
+			case NO_ONE -> Abilities.NO_ONE;
+			case DJ_OR_ALONE -> Abilities.DJ_OR_ALONE;
+			case DJ_ONLY -> Abilities.DJ_ONLY;
+			case LAX -> Abilities.DEVELOPER;
+			default -> Abilities.EVERYONE;
+		}));
+	}
+
+	public void registerOption(OptionType type, String field, String description, boolean isRequired, Ability ability) {
+		options.add(new CommandOption(type, field, description, isRequired, ability));
+	}
+
+	public CommandOption getOption(String name) {
+		for (CommandOption option : options) {
+			if (option.getName().equalsIgnoreCase(name)) return option;
+		}
+		return null;
 	}
 
 	public DefaultMemberPermissions getDefaultSlashPermission() {
-		if (defaultPermissionLevel == EVERYONE) return DefaultMemberPermissions.ENABLED;
-		else if (defaultPermissionLevel == ADMINISTRATOR) return DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR);
-		else if (defaultPermissionLevel == SERVER_OWNER) return DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR);
-		else if (defaultPermissionLevel == DJ_OR_ALONE) return DefaultMemberPermissions.ENABLED;
-		else if (defaultPermissionLevel == DJ_ONLY) return DefaultMemberPermissions.ENABLED;
-		else if (defaultPermissionLevel == LAX) return DefaultMemberPermissions.DISABLED;
-		return DefaultMemberPermissions.DISABLED;
+		return ability.getSlashCommandPermission();
 	}
 
 	public boolean matches(String command) {
@@ -91,42 +132,24 @@ public abstract class Command {
 		return false;
 	}
 
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 	public boolean hasPermission(Member member, int permission) {
-		if (permission == EVERYONE) return true;
-		else if (permission == ADMINISTRATOR) return member.hasPermission(Permission.ADMINISTRATOR);
-		else if (permission == SERVER_OWNER) return member.isOwner();
-		else if (permission == DJ_OR_ALONE) {
-			if (member.hasPermission(Permission.ADMINISTRATOR) || member.hasPermission(Permission.MANAGE_CHANNEL)) return true;
-
-			if (member.getVoiceState().getChannel() != null) {
-				if (member.getVoiceState().getChannel().getMembers().size() <= 2) {
-					return true;
-				}
-			}
-
-			for (Role role : member.getRoles()) {
-				if (role.getName().equalsIgnoreCase("DJ")) return true;
-			}
-
-			return false;
-		}
-		else if (permission == DJ_ONLY) {
-			if (member.hasPermission(Permission.ADMINISTRATOR) || member.hasPermission(Permission.MANAGE_CHANNEL)) return true;
-
-			for (Role role : member.getRoles()) {
-				if (role.getName().equalsIgnoreCase("DJ")) return true;
-			}
-
-			return false;
-		}
-		else if (permission == LAX) return member.getIdLong() == 573609645172719617L;
-		else return false;
+		return true;
 	}
 
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 	public boolean hasPermission(Member member) {
-		return hasPermission(member, defaultPermissionLevel);
+		return true;
 	}
 
+	public void missingOption(CommandOption option, MessageChannel channel) {
+		missingOption(option.getOptionData(), channel);
+	}
+
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 	public void missingOption(OptionData option, MessageChannel channel) {
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.setTitle("Missing Option: " + option.getName());
@@ -135,6 +158,12 @@ public abstract class Command {
 		eb.addField("", option.getName() + " is a required field", true);
 
 		channel.sendMessageEmbeds(eb.build()).queue();
+	}
+
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
+	public int getDefaultPermissionLevel() {
+		return -1;
 	}
 
 	@Override
