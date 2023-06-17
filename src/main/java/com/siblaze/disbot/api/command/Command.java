@@ -1,5 +1,6 @@
 package com.siblaze.disbot.api.command;
 
+import com.google.common.base.Strings;
 import com.siblaze.disbot.api.Abilities;
 import com.siblaze.disbot.api.Ability;
 import java.awt.Color;
@@ -54,7 +55,7 @@ public abstract class Command {
 		this.name = name;
 		this.ability = ability;
 		this.context = context;
-		this.description = description;
+		this.description = Strings.isNullOrEmpty(description) ? "No description provided." : description;
 		this.aliases = aliases;
 	}
 
