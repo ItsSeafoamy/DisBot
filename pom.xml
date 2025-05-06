@@ -71,7 +71,7 @@
 		<dependency>
 			<groupId>net.dv8tion</groupId>
 			<artifactId>JDA</artifactId>
-			<version>5.0.0-beta.6</version>
+			<version>5.5.1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -89,7 +89,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>31.1-jre</version>
+			<version>33.4.8-jre</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -107,7 +107,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.2.11</version>
+			<version>1.5.18</version>
 		</dependency>
 	</dependencies>
 </project>
