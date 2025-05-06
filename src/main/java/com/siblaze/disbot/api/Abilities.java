@@ -27,42 +27,4 @@ public final class Abilities {
 		}
 		return false;
 	});
-
-	/**
-	 * Only those with a role called DJ, or those alone in the voice channel with this bot, can use this command
-	 * @deprecated Should be implemented by the bot if needed
-	 */
-	@Deprecated
-	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-	public static final Ability DJ_OR_ALONE = Ability.of((bot, member) -> {
-		if (member.hasPermission(Permission.ADMINISTRATOR) || member.hasPermission(Permission.MANAGE_CHANNEL)) return true;
-
-		if (member.getVoiceState().getChannel() != null) {
-			if (member.getVoiceState().getChannel().getMembers().size() <= 2) {
-				return true;
-			}
-		}
-
-		for (Role role : member.getRoles()) {
-			if (role.getName().equalsIgnoreCase("DJ")) return true;
-		}
-
-		return false;
-	});
-
-	/**
-	 * Only those with a role called DJ can use this command
-	 * @deprecated Should be implemented by the bot if needed
-	 */
-	@Deprecated
-	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-	public static final Ability DJ_ONLY = Ability.of((bot, member) -> {
-		if (member.hasPermission(Permission.ADMINISTRATOR) || member.hasPermission(Permission.MANAGE_CHANNEL)) return true;
-
-		for (Role role : member.getRoles()) {
-			if (role.getName().equalsIgnoreCase("DJ")) return true;
-		}
-
-		return false;
-	});
 }

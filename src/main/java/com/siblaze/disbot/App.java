@@ -25,7 +25,7 @@ public class App {
 	private static final Logger logger = LoggerFactory.getLogger("DisBot");
 
 	public static void main(String[] args) {
-		logger.info("Starting DisBot v1.4");
+		logger.info("Starting DisBot v1.4-SNAPSHOT");
 
 		// Configuration
 		File configFile = new File("config.json");

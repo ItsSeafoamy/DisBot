@@ -53,28 +53,6 @@ public class CommandManager extends ListenerAdapter {
 		commands.add(command);
 	}
 
-	/**
-	 * @deprecated Use {@link #registerCommand(Command)} instead. <br/>
-	 * Contexts are now set in the {@link Command} constructor. <br/>
-	 * Using this method will change the command's context for backwards compatibility.
-	 */
-	@Deprecated
-	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-	public void registerCommand(Command command, int contexts) {
-		command.setContext(contexts);
-		registerCommand(command);
-	}
-
-	/**
-	 * @deprecated Use {@link #getCommand(String)} instead. <br/>
-	 * The direct message parameter is no longer used.
-	 */
-	@Deprecated
-	@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-	public Command getCommand(String label, boolean dm) {
-		return getCommand(label);
-	}
-
 	public Command getCommand(String label) {
 		for (Command cmd : commands) {
 			if (cmd.matches(label)) return cmd;
@@ -155,7 +133,7 @@ public class CommandManager extends ListenerAdapter {
 								}
 							}
 
-							if (cmd.getAnonymousField() != null && anonymousOptions.size() > 0) {
+							if (cmd.getAnonymousField() != null && !anonymousOptions.isEmpty()) {
 								String anonymousString = Joiner.on(' ').join(anonymousOptions);
 								options.putIfAbsent(cmd.getAnonymousField(), new OptionValue(OptionType.STRING, cmd.getAnonymousField(), anonymousString));
 							} else {
@@ -177,7 +155,7 @@ public class CommandManager extends ListenerAdapter {
 								}
 							}
 
-							if (unrecognizedOptions.size() > 0) {
+							if (!unrecognizedOptions.isEmpty()) {
 								EmbedBuilder eb = new EmbedBuilder();
 								eb.setTitle("Unknown Options Provided");
 								eb.setColor(Color.RED);
