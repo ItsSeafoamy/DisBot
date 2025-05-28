@@ -79,7 +79,7 @@ public class App {
 				}
 			} catch (IOException | URISyntaxException e) {
 				logger.error("Could not load bot from " + botJar.getName() + ". Make sure bot.json is present!", e);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				logger.error("Could not load bot from " + botJar.getName() + ".", e);
 			}
 		}
